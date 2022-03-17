@@ -1,0 +1,19 @@
+---
+# Configs
+nginx_config: ./configs/nginx/bitrix.conf.j2
+php_conf: ./configs/php/web.conf
+php_ini: ./configs/php/bitrix.ini
+
+# Linux parameters
+web_user: web
+web_user_password: super
+
+# MySQL parameters
+mysql_root_password: VU7T&2PyQg%u
+mysql_name_db: test_ansible
+mysql_name_user: web
+mysql_password_user: VU7T&2PyQg%u
+
+# Nginx parameters
+domain_name: localhost
+
