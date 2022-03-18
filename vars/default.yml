@@ -6,14 +6,15 @@ php_ini: ./configs/php/bitrix.ini
 
 # Linux parameters
 web_user: web
-web_user_password: super
+web_user_password: test
 
 # MySQL parameters
-mysql_root_password: VU7T&2PyQg%u
+mysql_root_password: test
 mysql_name_db: test_ansible
 mysql_name_user: web
-mysql_password_user: VU7T&2PyQg%u
+mysql_password_user: test
 
 # Nginx parameters
-domain_name: localhost
-
+domain_name: test.ru
+path_project: /var/www/web/sites/{{ domain_name }}
+path_shared_project: /var/www/web/shared/{{ domain_name }}

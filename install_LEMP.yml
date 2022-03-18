@@ -1,9 +1,12 @@
 ---
 - hosts: all
   become: true
+  vars:
+      php_version: '7.4'
   vars_files:
     - "vars/default.yml"
-
+  roles:
+      - install_php
   tasks:
     
     # Create user
@@ -17,7 +20,7 @@
     # Creates directorys
     - name: Create a directory {{ domain_name }} in "sites" if it does not exist
       file:
-        path: /var/www/web/sites/{{ domain_name }}
+        path: "{{ path_project }}"
         state: directory
         owner: "{{ web_user }}"
         group: "{{ web_user }}"
@@ -25,7 +28,7 @@
 
     - name: Create a directory {{ domain_name }} in "shared" if it does not exist
       file:
-        path: /var/www/web/shared/{{ domain_name }}
+        path: "{{ path_shared_project }}"
         state: directory
         owner: "{{ web_user }}"
         group: "{{ web_user }}"
@@ -112,40 +115,10 @@
         state: present
 
     # Install PHP
-    - name: Installation install software-properties-common
-      apt: 
-        name: software-properties-common
-
-    - name: Repo PHP 7.4
-      apt_repository:
-        repo: ppa:ondrej/php
-   
-    - name: Updating the repo
-      apt: 
-        update_cache: yes
-
-    - name: Installation PHP 7.4
-      apt: 
-        name: php7.4 
-        state: present
-
-    - name: Install lamp stack
+    - name: Install PHP modules
       apt:
-        pkg:
-          - php7.4-mysql
-          - php7.4-curl
-          - php7.4-bcmath
-          - php7.4-json
-          - php7.4-xsl
-          - php7.4-gd
-          - php7.4-mbstring
-          - php7.4-zip
-          - php7.4-xml
-          - php7.4-readline
-          - php7.4-fpm
-          - php7.4-intl
-        state: present
-        update_cache: yes 
+        name: "{{ php_packages }}"
+      notify: "reload php{{ php_version }}-fpm"
 
     # Config php.ini and user config
     - name: Copy bitrix.ini
