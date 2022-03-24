@@ -1,55 +1,13 @@
+server {
+        listen 443; 
 
-server {
-    listen 80;
-    server_name {{ domain_name }} www.{{ domain_name }};                                    
-    charset off;
-    index index.php index.html;
-    disable_symlinks if_not_owner from=$root_path;
-    access_log /var/log/nginx/{{ domain_name }}.access.log;            
-    error_log /var/log/nginx/{{ domain_name }}.error.log notice;        
-    ssi on;
-    set $root_path /var/www/web/sites/{{ domain_name }};               
-    root $root_path;
-    gzip on;
-    gzip_comp_level 7;
-    gzip_disable "msie6";
-    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript;
-    location / {
-        error_page 404 = /404.php;
-        location ~ [^/]\.ph(p\d*|tml)$ {
-            try_files /does_not_exists @php;
-        }
-        location ~* ^.+\.(jpg|jpeg|gif|png|svg|js|css|mp3|ogg|mpe?g|avi|zip|gz|bz2?|rar|swf)$ {
-            expires 7d;
-        }
-    }
-    location @php {
-        fastcgi_index index.php;
-        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
-        fastcgi_split_path_info ^((?U).+\.ph(?:p\d*|tml))(/?.+)$;
-        try_files $uri =404;
-        include fastcgi_params;
-    }
-    return 301 https://$server_name$request_uri;
-}
-server {
-        listen 443;
-        #listen 443 ssl;
         ssi on;
         gzip on;
         gzip_comp_level 7;
         gzip_disable "msie6";
         gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript;
-        server_name {{ domain_name }} www.{{ domain_name }};                                                                              
-
-        #ssl_certificate "/etc/letsencrypt/live/{{ domain_name }}/fullchain.pem";                                    
-        #ssl_certificate_key "/etc/letsencrypt/live/{{ domain_name }}/privkey.pem";                                  
-        #ssl_trusted_certificate /etc/letsencrypt/live/{{ domain_name }}/chain.pem;                                  
-        
-        ssl_ciphers EECDH:+AES256:-3DES:RSA+AES:!NULL:!RC4;
-        ssl_prefer_server_ciphers on;
-        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-
+        server_name {{ domain_name }} {% for host in list_subdomens %} {{ host }} {% endfor %};                                                                              
+                                    
         charset off;
         #disable_symlinks if_not_owner from=$root_path;
         index index.php;
@@ -153,3 +111,39 @@ server {
                 access_log off ;
         }
 }
+server {
+    listen 80 default;
+    server_name {{ domain_name }} {% for host in list_subdomens %} {{ host }} {% endfor %};                                    
+    charset off;
+    index index.php index.html;
+    disable_symlinks if_not_owner from=$root_path;
+    access_log /var/log/nginx/{{ domain_name }}.access.log;            
+    error_log /var/log/nginx/{{ domain_name }}.error.log notice;        
+    ssi on;
+    set $root_path /var/www/web/sites/{{ domain_name }};               
+    root $root_path;
+    gzip on;
+    gzip_comp_level 7;
+    gzip_disable "msie6";
+    gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript;
+    location / {
+        error_page 404 = /404.php;
+        location ~ [^/]\.ph(p\d*|tml)$ {
+            try_files /does_not_exists @php;
+        }
+        location ~* ^.+\.(jpg|jpeg|gif|png|svg|js|css|mp3|ogg|mpe?g|avi|zip|gz|bz2?|rar|swf)$ {
+            expires 7d;
+        }
+    }
+    location @php {
+        fastcgi_index index.php;
+        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        fastcgi_split_path_info ^((?U).+\.ph(?:p\d*|tml))(/?.+)$;
+        try_files $uri =404;
+        include fastcgi_params;
+    }
+    return 301 https://$server_name$request_uri;
+}
+
+
+

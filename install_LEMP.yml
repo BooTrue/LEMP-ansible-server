@@ -1,8 +1,6 @@
 ---
 - hosts: all
   become: true
-  vars:
-      php_version: '7.4'
   vars_files:
     - "vars/default.yml"
   roles:
@@ -18,6 +16,7 @@
         state: present
 
     # Creates directorys
+
     - name: Create a directory {{ domain_name }} in "sites" if it does not exist
       file:
         path: "{{ path_project }}"
@@ -34,49 +33,16 @@
         group: "{{ web_user }}"
         mode: '0755'
 
-    # Install Nginx
-    - name: Install nginx
-      apt: 
-        name: nginx
-        state: latest
-
-    - name: Start nginx
-      service:
-        name: nginx
-        state: started
-
-    - name: Template the nginx config file and restart nginx
-      template:
-        src: "{{nginx_config}}"
-        dest: /etc/nginx/sites-available/{{ domain_name }}
-
-    - name: Create symlink
-      file:
-        src: /etc/nginx/sites-available/{{ domain_name }}
-        dest: /etc/nginx/sites-enabled/{{ domain_name }}
-        state: link
-
-    - name: Change web user  for server
-      ansible.builtin.replace:
-        path: /etc/nginx/nginx.conf
-        regexp: 'user www-data;'
-        replace: 'user web;'
-    
-    - name: Restart nginx
-      service:
-        name: nginx
-        state: restarted
 
     # Install Utility software
-    - name: Install PIP
-      apt: 
-        name: python3-pip
-        state: latest
 
-    - name: Install PyMysql
-      pip:
-        name: pymysql
-        state: present
+    - name: Install PIP, PyMysql
+      apt: 
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - python3-pip
+        - python3-pymysql
 
     # Install MariaDB
     - name: Install MariaDB
@@ -89,6 +55,15 @@
       service:
         name: mysql
         state: started
+
+    - name: Add sql-mode in my.cnf
+      command: echo 'sql-mode="NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"' >> /etc/mysql/my.cnf
+      ignore_errors: yes
+
+    - name: Restart mariadb
+      service:
+        name: mariadb
+        state: restarted  
 
     # Setting mysql_secure_installation
     - name: Setting mysql_secure_installation
@@ -118,35 +93,105 @@
     - name: Install PHP modules
       apt:
         name: "{{ php_packages }}"
-      notify: "reload php{{ php_version }}-fpm"
+
+    - name: Create a directory for php session if it does not exist
+      file:
+        path: "{{ php_session_path }}"
+        state: directory
+        owner: "{{ web_user }}"
+        group: "{{ web_user }}"
+        mode: '0755'
 
     # Config php.ini and user config
-    - name: Copy bitrix.ini
-      copy:
-        src: "{{ php_ini }}"
-        dest: /etc/php/7.4/mods-available
 
-    - name: Copy web.conf
-      copy:
+    - name: Template bitrix.ini
+      template:
+        src: "{{ php_ini }}"
+        dest: /etc/php/{{ php_version }}/mods-available
+
+    - name: Template web.conf
+      template:
         src: "{{ php_conf }}"
-        dest: /etc/php/7.4/fpm/pool.d
+        dest: /etc/php/{{ php_version }}/fpm/pool.d
 
     - name: Renamed www.conf to www.conf_default
-      command: mv /etc/php/7.4/fpm/pool.d/www.conf /etc/php/7.4/fpm/pool.d/www.conf_default
+      command: mv /etc/php/{{ php_version }}/fpm/pool.d/www.conf /etc/php/7.4/fpm/pool.d/www.conf_default
+      ignore_errors: yes
 
     - name: Create symlink for bitrix.ini in fpm
       file:
-        src: /etc/php/7.4/mods-available/bitrix.ini
-        dest: /etc/php/7.4/fpm/conf.d/50-bitrix.ini
+        src: /etc/php/{{ php_version }}/mods-available/bitrix.ini
+        dest: /etc/php/{{ php_version }}/fpm/conf.d/50-bitrix.ini
         state: link
 
     - name: Create symlink for bitrix.ini in cli
       file:
-        src: /etc/php/7.4/mods-available/bitrix.ini
-        dest: /etc/php/7.4/cli/conf.d/50-bitrix.ini
+        src: /etc/php/{{ php_version }}/mods-available/bitrix.ini
+        dest: /etc/php/{{ php_version }}/cli/conf.d/50-bitrix.ini
         state: link
 
     - name: Restart service php-fpm
       service:
-        name: php7.4-fpm
+        name: php{{ php_version }}-fpm
         state: restarted
+
+    # Install Nginx
+    - name: Install nginx
+      apt: 
+        name: nginx
+        state: latest
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+
+    - name: Delete default.conf
+      file: 
+        state: absent
+        path: "/etc/nginx/sites-enabled/default"
+
+    - name: Delete default.conf
+      file: 
+        state: absent
+        path: "/etc/nginx/sites-available/default"
+
+    - name: Template the nginx config file and restart nginx
+      template:
+        src: "{{nginx_config}}"
+        dest: /etc/nginx/sites-available/{{ domain_name }}
+
+    - name: Create symlink
+      file:
+        src: /etc/nginx/sites-available/{{ domain_name }}
+        dest: /etc/nginx/sites-enabled/{{ domain_name }}
+        state: link
+
+    - name: Change web user  for server
+      ansible.builtin.replace:
+        path: /etc/nginx/nginx.conf
+        regexp: 'user www-data;'
+        replace: 'user web;'
+    
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    # Install and setings certboot
+    - name: "Install cerboot and python3-certbot-nginx"
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - certbot
+        - python3-certbot-nginx
+
+    - name: Generateing certificate with subdomens
+      command:  sudo certbot --non-interactive --agree-tos -m "{{ email_certboot }}" --nginx -d "{{ domain_name }}" {% for host in list_subdomens %} --nginx -d {{ host }} {% endfor %}
+      when: "{{ list_subdomens }}"
+
+    - name: Generateing certificate no with subdomens
+      command:  sudo certbot --non-interactive --agree-tos -m "{{ email_certboot }}" --nginx -d "{{ domain_name }}"
+    
+    

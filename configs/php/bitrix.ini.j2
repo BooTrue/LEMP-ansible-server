@@ -30,9 +30,9 @@ mbstring.internal_encoding = UTF-8
 session.cookie_httponly = On
 session.gc_maxlifetime = 86400
 session.entropy_file = /dev/urandom
-session.save_path = "/tmp/php_sessions/www"
+session.save_path = {{ php_session_path }}
 session.cookie_httponly = On
 
 ;set timezone=Europe/Moscow by ansible manager at 2018-02-27 11:55:13
-memory_limit = 256M
+memory_limit = 1024M
 date.timezone = Europe/Moscow

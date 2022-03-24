@@ -1,20 +1,28 @@
 ---
 # Configs
 nginx_config: ./configs/nginx/bitrix.conf.j2
-php_conf: ./configs/php/web.conf
-php_ini: ./configs/php/bitrix.ini
+php_conf: ./configs/php/web.conf.j2
+php_ini: ./configs/php/bitrix.ini.j2
+
+# PHP parameters
+php_version: '7.4'
+php_session_path: "/var/www/web/shared/php/session"
 
 # Linux parameters
 web_user: web
-web_user_password: test
+web_user_password: passwd
 
 # MySQL parameters
-mysql_root_password: test
+mysql_root_password: passwd
 mysql_name_db: test_ansible
 mysql_name_user: web
-mysql_password_user: test
+mysql_password_user: passwd
 
 # Nginx parameters
-domain_name: test.ru
+domain_name: ansible.2204535.ru
+list_subdomens: ''
+
+email_certboot: info@d-element.ru
+
 path_project: /var/www/web/sites/{{ domain_name }}
 path_shared_project: /var/www/web/shared/{{ domain_name }}
