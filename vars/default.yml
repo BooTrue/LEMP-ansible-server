@@ -14,7 +14,7 @@ web_user_password: passwd
 
 # MySQL parameters
 mysql_root_password: passwd
-mysql_name_db: test_ansible
+mysql_name_db: db_test
 mysql_name_user: web
 mysql_password_user: passwd
 

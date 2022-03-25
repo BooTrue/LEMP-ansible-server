@@ -4,7 +4,7 @@
   vars_files:
     - "vars/default.yml"
   roles:
-      - install_php
+      - "roles/install_php"
   tasks:
     
     # Create user

@@ -38,4 +38,11 @@
     php_install_recommends: "{{ php_versions_install_recommends }}"
 
 # Setup tasks.
-- include_tasks: "setup-{{ ansible_os_family }}.yml"
+- include_tasks: "setup-Debian.yml"
+  when: ansible_distribution == "Debian"
+
+- include_tasks: "setup-Ubuntu.yml"
+  when: ansible_distribution == "Ubuntu"
+
+- include_tasks: "setup-RedHat.yml"
+  when: ansible_distribution == "RedHat"
