@@ -4,7 +4,7 @@
   vars_files:
     - "vars/default.yml"
   roles:
-      - "roles/install_php"
+    - { role: geerlingguy.php }
   tasks:
     
     # Create user
@@ -90,9 +90,11 @@
         state: present
 
     # Install PHP
+    
     - name: Install PHP modules
       apt:
         name: "{{ php_packages }}"
+        update_cache: yes
 
     - name: Create a directory for php session if it does not exist
       file:
@@ -105,14 +107,14 @@
     # Config php.ini and user config
 
     - name: Template bitrix.ini
-      template:
+      ansible.builtin.template:
         src: "{{ php_ini }}"
-        dest: /etc/php/{{ php_version }}/mods-available
+        dest: /etc/php/{{ php_version }}/mods-available/local.ini
 
     - name: Template web.conf
-      template:
+      ansible.builtin.template:
         src: "{{ php_conf }}"
-        dest: /etc/php/{{ php_version }}/fpm/pool.d
+        dest: /etc/php/{{ php_version }}/fpm/pool.d/web.conf
 
     - name: Renamed www.conf to www.conf_default
       command: mv /etc/php/{{ php_version }}/fpm/pool.d/www.conf /etc/php/7.4/fpm/pool.d/www.conf_default
@@ -120,13 +122,13 @@
 
     - name: Create symlink for bitrix.ini in fpm
       file:
-        src: /etc/php/{{ php_version }}/mods-available/bitrix.ini
+        src: /etc/php/{{ php_version }}/mods-available/local.ini
         dest: /etc/php/{{ php_version }}/fpm/conf.d/50-bitrix.ini
         state: link
 
     - name: Create symlink for bitrix.ini in cli
       file:
-        src: /etc/php/{{ php_version }}/mods-available/bitrix.ini
+        src: /etc/php/{{ php_version }}/mods-available/local.ini
         dest: /etc/php/{{ php_version }}/cli/conf.d/50-bitrix.ini
         state: link
 

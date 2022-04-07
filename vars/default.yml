@@ -6,6 +6,17 @@ php_ini: ./configs/php/bitrix.ini.j2
 
 # PHP parameters
 php_version: '7.4'
+php_packages:
+  - php{{ php_version }}
+  - php{{ php_version }}-cli
+  - php{{ php_version }}-fpm
+  - php{{ php_version }}-mysql
+  - php{{ php_version }}-common
+  - php{{ php_version }}-curl
+  - php{{ php_version }}-gd
+  - php{{ php_version }}-mbstring
+  - php{{ php_version }}-xml
+  - php{{ php_version }}-zip
 php_session_path: "/var/www/web/shared/php/session"
 
 # Linux parameters

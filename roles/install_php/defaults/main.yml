@@ -1,9 +1,0 @@
----
-vars_files:
-    - "vars/default.yml"
-
-# The PHP version to be installed.
-php_version: "{{ php_version }}"
-
-# For Debian OSes only.
-php_versions_install_recommends: false
